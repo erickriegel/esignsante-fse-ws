@@ -4,11 +4,11 @@
 	<groupId>fr.asipsante.api.sign</groupId>
 	<artifactId>esignsante-webservices</artifactId>
 	<packaging>jar</packaging>
-	<name>esignsante-webservices</name>
-	<version>2.5.0.14-SNAPSHOT</version>
+	<name>esignsante-fse-webservices</name>
+	<version>1.0.0.0-SNAPSHOT</version>
 	<properties>
 		<java.version>1.8</java.version>
-		<asipsign.version>2.4.0.4</asipsign.version>
+		<asipsign.version>1.0.0.0-SNAPSHOT</asipsign.version>
 		<springfox-version>2.9.2</springfox-version>
 		<servlet-api.version>4.0.1</servlet-api.version>
 		<start-class>fr.asipsante.api.sign.ws.Application</start-class>
@@ -253,7 +253,7 @@
 		</dependency>
 		<dependency>
 			<groupId>fr.asipsante.api.sign</groupId>
-			<artifactId>asip-sign-api</artifactId>
+			<artifactId>asip-sign-fse-api</artifactId>
 			<version>${asipsign.version}</version>
 			<exclusions>
 				<exclusion>
