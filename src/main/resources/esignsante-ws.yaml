@@ -1,4 +1,6 @@
 openapi: 3.0.0
+x-stoplight:
+  id: s7ajxipp5ys9v
 servers:
   - description: SwaggerHub API Auto Mocking
     url: 'https://esignsante.asipsante.fr/{basePath}'
@@ -30,6 +32,8 @@ tags:
     description: Ressources permettant de signer un document au format Pades Baseline B et/ou de vérifier un flux signé en PADES Baseline B avec ou sans preuve.
   - name: certificats
     description: Ressources permettant de vérifier un certificat avec ou sans preuve.
+  - name: fse
+    description: Ressource permettant de signer un hash au format pkcs7 avec preuve.
 paths:
   /:
     get:
@@ -238,6 +242,17 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/SignDocumentWithProof'
+            examples:
+              example-1:
+                value:
+                  secret: string
+                  idSignConf: 0
+                  file: string
+                  signers: ['curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"','']
+                  idVerifSignConf: 0
+                  requestId: string
+                  proofTag: string
+                  applicantId: string
         required: true
       responses:
         '200':
@@ -344,6 +359,55 @@ paths:
       tags:
         - signatures-api-controller
         - pades
+  /signatures/fse:
+    post:
+      summary: Signature du hash d'une feuille de soin électronique avec preuve.
+      operationId: signatureFSEWithProof
+      description: 'L''opération permet au client de signer le hash d''un document (non transmis), par exemple le hash d''une feuille de soin électronique, en pkcs7 détaché ainsi que de générer une preuve de vérification de signature.'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignFSEWithProof'
+            examples:
+              example-1:
+                value:
+                  secret: string
+                  idSignConf: 0
+                  hash: string
+                  idFacturationPS: string
+                  typeFlux: T
+                  signers:
+                    - string
+                  idVerifSignConf: 0
+                  requestId: string
+                  proofTag: string
+                  applicantId: string
+        required: true
+      responses:
+        '200':
+          description: Requête en succès.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ESignSanteSignatureReportWithProof'
+        '400':
+          description: Requête mal formée.
+        '401':
+          description: Une authentification est nécessaire pour accéder à la ressource (secret incorrect).
+        '404':
+          description: Ressource introuvable (identifiant de configuration qui n'existe pas par exemple).
+        '500':
+          description: Erreur interne du serveur.
+        '501':
+          description: L'opération n'est pas supportée par le serveur (soumission d'un document qui n'est pas au format XML pour une signature enveloppée par exemple).
+        '503':
+          description: Le service n'est pas disponible.
+      parameters:
+        - $ref: '#/components/parameters/OpenidTokens'
+      tags:
+        - signatures-api-controller
+        - fse
   /validation/signatures/xmldsig:
     post:
       summary: Vérification de signature au format XMLdsig.
@@ -650,7 +714,7 @@ components:
         signers:
           type: array
           description: 'Liste des signataires délégataires. L''IHM swagger ne gère qu''1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"'
-          example: curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"
+          example: ['curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"',' ']
           items:
             type: string
     SignDocumentDSig:
@@ -689,7 +753,7 @@ components:
         signers:
           type: array
           description: 'Liste des signataires délégataires. L''IHM swagger ne gère qu''1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"'
-          example: curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"
+          example: ['curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"','']
           items:
             type: string
         idVerifSignConf:
@@ -711,6 +775,59 @@ components:
       required:
         - idSignConf
         - file
+        - idVerifSignConf
+        - requestId
+        - proofTag
+    SignFSEWithProof:
+      type: object
+      properties:
+        secret:
+          description: Secret
+          type: string
+          pattern: '^[a-zA-Z_0-9\-]*$'
+        idSignConf:
+          description: Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la signature (appel de l'opération "/configurations").
+          type: integer
+          format: int64
+        hash:
+          description: hash à signer.
+          type: string
+          format: binary
+        idFacturationPS:
+          description: identifiant de facturation du personnel de Sante à l'origine de la demande de signature
+          type: string
+          pattern: '^[a-zA-Z_0-9\-]*$'
+        typeFlux:
+          description: type de flux (valeur T ou R)
+          type: string
+          pattern: '^[TR]$'
+        signers:
+          type: array
+          description: 'Liste des signataires délégataires. L''IHM swagger ne gère qu''1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"'
+          example: ['curl -X POST [...] -F "signers=Dupont" -F "signers=Dupond"','']
+          items:
+            type: string
+        idVerifSignConf:
+          description: Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la vérification de signature (appel de l'opération "/configurations").
+          type: integer
+          format: int64
+        requestId:
+          description: Identifiant de la demande pour renseigner l'élément RequestId de la preuve.
+          type: string
+          pattern: '^[a-zA-Z_0-9\-]*$'
+        proofTag:
+          description: Tag utilisé pour renseigner l'élément Tag de la preuve.
+          type: string
+          pattern: '^[a-zA-Z_0-9\-]*$'
+        applicantId:
+          description: Identifiant du demandeur utilisé pour renseigner le champ applicantId de la preuve.
+          type: string
+          pattern: '^[a-zA-Z_0-9\-]*$'
+      required:
+        - idSignConf
+        - hash
+        - idFacturationPS
+        - typeFlux
         - idVerifSignConf
         - requestId
         - proofTag
@@ -1100,7 +1217,7 @@ components:
     OpenidTokens:
       name: X-OpenidToken
       description: 'Un openidToken doit être passé au format JSON encodé en base 64. Pour passer plusieurs tokens, il faut utiliser plusieurs paramètres de header. Attention aux simples et doubles guillemets lors du passage de paramètres JSON.<br>Exemple: curl -X POST [...] -H "accept: application/json" -H ''openidTokens: {"introspectionResponse":"xxx","userInfo":"xxxx","accessToken":"xxxxx"}'' -H ''openidTokens: {"introspectionResponse":"xxxxxx","userInfo":"xxxxxxx","accessToken":"xxxxxxxxx"}'' -H "Content-Type: multipart/form-data" [...]'
-      example: "curl -X POST [...] -H  \"accept: application/json\" -H 'openidTokens: {\"introspectionResponse\":\"xxx\",\"userInfo\":\"xxxx\",\"accessToken\":\"xxxxx\"}' -H 'openidTokens: {\"introspectionResponse\":\"xxxxxx\",\"userInfo\":\"xxxxxxx\",\"accessToken\":\"xxxxxxxxx\"}' -H \"Content-Type: multipart/form-data\" [...]"
+      example: ['curl -X POST [...] -H  "accept: application/json" -H ''openidTokens: {"introspectionResponse":"xxx","userInfo":"xxxx","accessToken":"xxxxx"}'' -H ''openidTokens: {"introspectionResponse":"xxxxxx","userInfo":"xxxxxxx","accessToken":"xxxxxxxxx"}'' -H "Content-Type: multipart/form-data" [...]','']
       in: header
       schema:
         type: array

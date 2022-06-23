@@ -11,6 +11,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,10 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,6 +58,12 @@ import fr.asipsante.api.sign.ws.model.Metadata;
 import fr.asipsante.api.sign.ws.util.ESignatureType;
 import fr.asipsante.api.sign.ws.util.SignWsUtils;
 import fr.asipsante.api.sign.ws.util.WsVars;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 /**
  * The Class SignaturesApiDelegateImpl.
@@ -314,7 +326,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	@Override
 	public ResponseEntity<ESignSanteSignatureReportWithProof> signatureXadesWithProof(final Long idSignConf,
 			final MultipartFile doc, final Long idVerifSignConf, final String requestId, final String proofTag,
-			final String applicantId, final String secret, List<String> signers) {
+			final String secret, List<String> signers, final String applicantId ) {
 		Version wsVersion = DEFAULT_VERSION;
 		try {
 			// get version object for proof generation
@@ -357,7 +369,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	@Override
 	public ResponseEntity<ESignSanteSignatureReportWithProof> signaturePadesWithProof(final Long idSignConf,
 			final MultipartFile doc, final Long idVerifSignConf, final String requestId, final String proofTag,
-			final String applicantId, final String secret, List<String> signers) {
+			final String secret, List<String> signers, final String applicantId ) {
 		Version wsVersion = DEFAULT_VERSION;
 		try {
 			// get version object for proof generation
@@ -383,6 +395,12 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 		}
 	}
 
+		@Override
+	    public ResponseEntity<ESignSanteSignatureReportWithProof> signatureFSEWithProof(@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la signature (appel de l'opération \\\"/configurations\\\").", required=true) @RequestParam(value="idSignConf", required=true)  Long idSignConf,@ApiParam(value = "file detail") @Valid @RequestPart("file") MultipartFile hash,@ApiParam(value = "identifiant de facturation du personnel de Sante à l'origine de la demande de signature", required=true) @RequestParam(value="idFacturationPS", required=true)  String idFacturationPS,@ApiParam(value = "type de flux (valeur T ou R)", required=true) @RequestParam(value="typeFlux", required=true)  String typeFlux,@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la vérification de signature (appel de l'opération \\\"/configurations\\\").", required=true) @RequestParam(value="idVerifSignConf", required=true)  Long idVerifSignConf,@ApiParam(value = "Identifiant de la demande pour renseigner l'élément RequestId de la preuve.", required=true) @RequestParam(value="requestId", required=true)  String requestId,@ApiParam(value = "Tag utilisé pour renseigner l'élément Tag de la preuve.", required=true) @RequestParam(value="proofTag", required=true)  String proofTag,@ApiParam(value = "Identifiant du demandeur utilisé pour renseigner le champ applicantId de la preuve.", required=true) @RequestParam(value="applicantId", required=true)  String applicantId,@ApiParam(value = "Secret") @RequestParam(value="secret", required=false)  String secret,@ApiParam(value = "Liste des signataires délégataires. L'IHM swagger ne gère qu'1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F \"signers=Dupont\" -F \"signers=Dupond\"") @RequestParam(value="signers", required=false)  List<String> signers) {
+	        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+	    }
+	 
+	
 	/**
 	 * Digital signature.
 	 *

@@ -13,6 +13,7 @@
 		<servlet-api.version>4.0.1</servlet-api.version>
 		<start-class>fr.asipsante.api.sign.ws.Application</start-class>
 		<dist>docker</dist>
+		<artifactory.hostname>http://repo.proxy-dev-forge.asip.hst.fluxus.net</artifactory.hostname>
 	</properties>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
