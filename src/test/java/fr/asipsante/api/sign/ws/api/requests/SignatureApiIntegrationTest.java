@@ -342,6 +342,22 @@ public class SignatureApiIntegrationTest {
                 .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
     }
     
+    /**
+     * Cas  passant 
+     *
+     * @throws Exception the exception
+     */
+    @Test
+    public void signatureFSEestWithProofAndTokenConforme() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+        		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
+                .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                .header("X-OpenidToken",
+						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+                .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
+    }
+    
     
     
     /**

@@ -6,6 +6,7 @@ package fr.asipsante.api.sign.ws.api.delegate;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,7 @@ import fr.asipsante.api.sign.ws.model.OpenidToken;
  */
 public class ApiDelegate {
 
+	public static final String XOPENID_HEADER_NAME ="xopenidtoken";
 	/**
 	 * The log.
 	 */
@@ -45,6 +47,7 @@ public class ApiDelegate {
 		if (attrs != null) {
 			request = Optional.of(new ServletWebRequest(attrs.getRequest()));
 		}
+		System.out.println(attrs.getAttributeNames(0));
 		return request;
 	}
 
@@ -65,6 +68,15 @@ public class ApiDelegate {
 	 */
 	public List<OpenidToken> parseOpenIdTokenHeader() throws AsipSignClientException {
 		ObjectMapper objectMapper = new ObjectMapper();
+		Optional<NativeWebRequest> tmp = getRequest();
+		NativeWebRequest tmp1 = tmp.get();
+		Iterator<String> liste = tmp1.getHeaderNames();
+		while (liste.hasNext()) {
+			System.out.println("name: "+ liste.next());
+		}
+		
+		// XOPENID_HEADER_NAME ="xopenidtoken";   X-OpenidToken
+		//Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues(XOPENID_HEADER_NAME));
 		Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues("X-OpenidToken"));
 		List<OpenidToken> openidTokens = new ArrayList<OpenidToken>();
 		if (arrayValues.isPresent()) {
@@ -84,6 +96,13 @@ public class ApiDelegate {
 			}
 		}
 
+		logger.error("openidTokens size :" + openidTokens.size());
+		if (openidTokens.size()> 0) {
+		logger.error("openidtoken[0] transmis reçu:");
+		logger.error("\t userinfo (base64): {} ", openidTokens.get(0).getUserInfo());
+		logger.error("\t accessToken: {} ", openidTokens.get(0).getAccessToken());
+		logger.error("\t PSCResponse: {} ", openidTokens.get(0).getIntrospectionResponse());
+		}
 		return openidTokens;
 	}
 }

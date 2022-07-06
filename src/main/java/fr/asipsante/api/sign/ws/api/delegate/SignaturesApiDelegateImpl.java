@@ -31,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import fr.asipsante.api.sign.bean.errors.ErreurSignature;
 import fr.asipsante.api.sign.bean.metadata.MetaDatum;
+import fr.asipsante.api.sign.bean.parameters.FSESignatureParameters;
 import fr.asipsante.api.sign.bean.parameters.ProofParameters;
 import fr.asipsante.api.sign.bean.parameters.SignatureParameters;
 import fr.asipsante.api.sign.bean.parameters.SignatureValidationParameters;
@@ -55,6 +56,7 @@ import fr.asipsante.api.sign.ws.model.ESignSanteSignatureReport;
 import fr.asipsante.api.sign.ws.model.ESignSanteSignatureReportWithProof;
 import fr.asipsante.api.sign.ws.model.Erreur;
 import fr.asipsante.api.sign.ws.model.Metadata;
+import fr.asipsante.api.sign.ws.model.SignFSEWithProof;
 import fr.asipsante.api.sign.ws.util.ESignatureType;
 import fr.asipsante.api.sign.ws.util.SignWsUtils;
 import fr.asipsante.api.sign.ws.util.WsVars;
@@ -231,6 +233,64 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 		return re;
 	}
 
+	private ResponseEntity<ESignSanteSignatureReportWithProof> executeFSEsignatureWithProof(
+			final String hash,final String idFacturationPS,final String typeFlux,
+			final ProofParameters proofParameters, final ESignatureType type, final SignatureParameters signParams,
+			final SignatureValidationParameters signValidationParameters, final SignatureParameters signProofParams) {
+		ResponseEntity<ESignSanteSignatureReportWithProof> re;
+		try {
+			// Contrôle du certificat de signature
+			HttpStatus status = SignWsUtils.checkCertificate(signParams, serviceCaCrl.getCacrlWrapper());
+			if (status != HttpStatus.CONTINUE) {
+				re = new ResponseEntity<>(status);
+			} else {
+				
+				// Signature du document					
+				final RapportSignature rapportSignature = signatureService.signFSE(hash.getBytes(), idFacturationPS, typeFlux, signParams);
+					// Validation de la signature
+				final RapportValidationSignature  rapportVerifSignature = signatureValidationService.validateFSESignature(
+							rapportSignature.getDocSigneBytes(), signValidationParameters, serviceCaCrl.getCacrlWrapper());							
+				
+			
+				// Géneration de la preuve
+				final String proof = proofGenerationService.generateSignVerifProof(rapportVerifSignature,
+						proofParameters, serviceCaCrl.getCacrlWrapper());
+				// Contrôle du certificat de signature de la preuve
+				status = SignWsUtils.checkCertificate(signProofParams, serviceCaCrl.getCacrlWrapper());
+				if (status != HttpStatus.CONTINUE) {
+					re = new ResponseEntity<>(status);
+				} else {
+					// Signature de la preuve
+					final RapportSignature rapportSignaturePreuve = signatureService.signXADESBaselineB(proof,
+							signProofParams);
+
+					final ESignSanteSignatureReportWithProof rapport = populateResultSignWithProof(
+							rapportVerifSignature.getListeErreurSignature(), rapportVerifSignature.getMetaData(),
+							rapportVerifSignature.isValide(), rapportSignature.getDocSigneBytes(),
+							rapportSignaturePreuve.getDocSigne());
+					re = new ResponseEntity<>(rapport, HttpStatus.OK);
+				}
+			}
+		}catch(
+
+	final AsipSignClientException e1)
+	{
+		log.error(ExceptionUtils.getStackTrace(e1));
+		re = new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+	}catch(
+	final AsipSignServerException e1)
+	{
+		log.error(ExceptionUtils.getStackTrace(e1));
+		re = new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+	}catch(final AsipSignException e1)
+	{
+		log.error(ExceptionUtils.getStackTrace(e1));
+		re = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	return re;
+	}
+
 	/**
 	 * Checks if all signature params are present.
 	 *
@@ -240,6 +300,19 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	 * @return boolean
 	 */
 	private boolean signParamsMissing(final Long idSignConf, final MultipartFile doc, final Long idVerifSignConf) {
+		return idSignConf == null || doc == null || idVerifSignConf == null;
+	}
+
+	/**
+	 * Checks if all fse signature params are present.
+	 *
+	 * @param idSignConf      the id sign conf
+	 * @param doc             the doc
+	 * @param idVerifSignConf the id verif sign conf
+	 * @return boolean
+	 */
+	private boolean signParamsMissing(final Long idSignConf, final String doc,
+			/* , final String idFacturation, */ final Long idVerifSignConf) {
 		return idSignConf == null || doc == null || idVerifSignConf == null;
 	}
 
@@ -326,7 +399,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	@Override
 	public ResponseEntity<ESignSanteSignatureReportWithProof> signatureXadesWithProof(final Long idSignConf,
 			final MultipartFile doc, final Long idVerifSignConf, final String requestId, final String proofTag,
-			final String secret, List<String> signers, final String applicantId ) {
+			final String secret, List<String> signers, final String applicantId) {
 		Version wsVersion = DEFAULT_VERSION;
 		try {
 			// get version object for proof generation
@@ -336,7 +409,6 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 		}
 		final ProofParameters proofParameters = new ProofParameters("Sign", requestId, proofTag, applicantId,
 				calledOperation("/signatures/xadesbaselinebwithproof"), wsVersion);
-
 
 		try {
 			// Remplissage de la liste des beans OpenId
@@ -355,21 +427,33 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	}
 
 	/**
-	 * Signature pades with proof.
+	 * Signature d'une fse avec preuve.
 	 *
 	 * @param idSignConf      the id sign conf
-	 * @param doc             the doc
+	 * @param hash            hash à signer de la FSE
+	 * @param idFacturationPS id du PS
+	 * @param typeFlux        type de flux (T ou R)
 	 * @param idVerifSignConf the id verif sign conf
 	 * @param requestId       the request id
 	 * @param proofTag        the proof tag
 	 * @param applicantId     the applicant id
 	 * @param secret          the secret
+	 * @param signers         the signers
 	 * @return the response entity
 	 */
+
 	@Override
-	public ResponseEntity<ESignSanteSignatureReportWithProof> signaturePadesWithProof(final Long idSignConf,
-			final MultipartFile doc, final Long idVerifSignConf, final String requestId, final String proofTag,
-			final String secret, List<String> signers, final String applicantId ) {
+	public ResponseEntity<ESignSanteSignatureReportWithProof> signatureFSEWithProof(
+			@ApiParam(value = "Secret", required = true) @RequestParam(value = "secret", required = true) String secret,
+			@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la signature (appel de l'opération \\\"/configurations\\\").", required = true) @RequestParam(value = "idSignConf", required = true) Long idSignConf,
+			@ApiParam(value = "hash à signer.", required = true) @RequestParam(value = "hash", required = true) String hash,
+			@ApiParam(value = "identifiant de facturation du personnel de Sante à l'origine de la demande de signature", required = true) @RequestParam(value = "idFacturationPS", required = true) String idFacturationPS,
+			@ApiParam(value = "type de flux (valeur T ou R)", required = true) @RequestParam(value = "typeFlux", required = true) String typeFlux,
+			@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la vérification de signature (appel de l'opération \\\"/configurations\\\").", required = true) @RequestParam(value = "idVerifSignConf", required = true) Long idVerifSignConf,
+			@ApiParam(value = "Liste des signataires délégataires. L'IHM swagger ne gère qu'1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F \"signers=Dupont\" -F \"signers=Dupond\"") @RequestParam(value = "signers", required = false) List<String> signers,
+			@ApiParam(value = "Identifiant de la demande pour renseigner l'élément RequestId de la preuve.") @RequestParam(value = "requestId", required = false) String requestId,
+			@ApiParam(value = "Tag utilisé pour renseigner l'élément Tag de la preuve.") @RequestParam(value = "proofTag", required = false) String proofTag,
+			@ApiParam(value = "Identifiant du demandeur utilisé pour renseigner le champ applicantId de la preuve.") @RequestParam(value = "applicantId", required = false) String applicantId) {
 		Version wsVersion = DEFAULT_VERSION;
 		try {
 			// get version object for proof generation
@@ -378,7 +462,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 			log.error(ExceptionUtils.getStackTrace(e));
 		}
 		final ProofParameters proofParameters = new ProofParameters("Sign", requestId, proofTag, applicantId,
-				calledOperation("/signatures/padesbaselinebwithproof"), wsVersion);
+				calledOperation("/signatures/fse"), wsVersion);
 
 		try {
 			// Remplissage de la liste des beans OpenId
@@ -386,21 +470,73 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 			tokens = SignWsUtils.convertOpenIdTokens(parseOpenIdTokenHeader());
 			if (!tokens.isEmpty()) {
 				proofParameters.setOpenidTokens(tokens);
+			} else {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
-			return digitalSignatureWithProof(secret, idSignConf, doc, idVerifSignConf, proofParameters,
-					ESignatureType.PADES, signers);
+
+			return signFSEWithProof(secret, idSignConf, hash, idFacturationPS, typeFlux, idVerifSignConf,
+					proofParameters, ESignatureType.FSE, signers);
+
 		} catch (AsipSignClientException e) {
+			// Problème lors du traitement du Header X-openidToken
 			log.error(ExceptionUtils.getStackTrace(e));
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 
-		@Override
-	    public ResponseEntity<ESignSanteSignatureReportWithProof> signatureFSEWithProof(@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la signature (appel de l'opération \\\"/configurations\\\").", required=true) @RequestParam(value="idSignConf", required=true)  Long idSignConf,@ApiParam(value = "file detail") @Valid @RequestPart("file") MultipartFile hash,@ApiParam(value = "identifiant de facturation du personnel de Sante à l'origine de la demande de signature", required=true) @RequestParam(value="idFacturationPS", required=true)  String idFacturationPS,@ApiParam(value = "type de flux (valeur T ou R)", required=true) @RequestParam(value="typeFlux", required=true)  String typeFlux,@ApiParam(value = "Identifiant de configuration à sélectionner parmi la liste des configurations disponibles pour la vérification de signature (appel de l'opération \\\"/configurations\\\").", required=true) @RequestParam(value="idVerifSignConf", required=true)  Long idVerifSignConf,@ApiParam(value = "Identifiant de la demande pour renseigner l'élément RequestId de la preuve.", required=true) @RequestParam(value="requestId", required=true)  String requestId,@ApiParam(value = "Tag utilisé pour renseigner l'élément Tag de la preuve.", required=true) @RequestParam(value="proofTag", required=true)  String proofTag,@ApiParam(value = "Identifiant du demandeur utilisé pour renseigner le champ applicantId de la preuve.", required=true) @RequestParam(value="applicantId", required=true)  String applicantId,@ApiParam(value = "Secret") @RequestParam(value="secret", required=false)  String secret,@ApiParam(value = "Liste des signataires délégataires. L'IHM swagger ne gère qu'1 seul signer - pour gérer plusieurs signers, rajouter des paramètres à la requête CURL.<br>Exemple: curl -X POST [...] -F \"signers=Dupont\" -F \"signers=Dupond\"") @RequestParam(value="signers", required=false)  List<String> signers) {
-	        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-	    }
-	 
-	
+	/**
+	 * Signature d'une fse avec preuve.
+	 *
+	 * @param idSignConf      the id sign conf
+	 * @param hash            hash à signer de la FSE
+	 * @param idFacturationPS id du PS
+	 * @param typeFlux        type de flux (T ou R)
+	 * @param idVerifSignConf the id verif sign conf
+	 * @param requestId       the request id
+	 * @param proofTag        the proof tag
+	 * @param applicantId     the applicant id
+	 * @param secret          the secret
+	 * @param signers         the signers
+	 * @return the response entity
+	 */
+	private ResponseEntity<ESignSanteSignatureReportWithProof> signFSEWithProof(final String secret,
+			final Long idSignConf, final String hash, final String idFacturationPS, final String typeFlux,
+			final Long idVerifSignConf, final ProofParameters proofParameters, final ESignatureType type,
+			final List<String> signers) {
+		ResponseEntity<ESignSanteSignatureReportWithProof> re = new ResponseEntity<>(HttpStatus.GONE);
+		final Optional<SignatureConf> signConf = globalConf.getSignatureById(idSignConf.toString());
+		final Optional<SignVerifConf> verifConf = globalConf.getSignatureVerificationById(idVerifSignConf.toString());
+		if (!signConf.isPresent() || !verifConf.isPresent()) {
+			re = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			log.error("Configuration {}", HttpStatus.NOT_FOUND.getReasonPhrase());
+		} else {
+			final Optional<ProofConf> signProofConf = globalConf.getProofById(signConf.get().getIdProofConf());
+			// if (acceptHeader.isPresent() &&
+			// acceptHeader.get().contains(WsVars.HEADER_TYPE.getVar())) {
+			// this is redundant with current implementation, params are assured
+			if (signParamsMissing(idSignConf, hash, idVerifSignConf) || proofParamsMissing(proofParameters)) {
+				re = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			} else if (!signProofConf.isPresent()) {
+				re = new ResponseEntity<>(HttpStatus.NOT_FOUND);
+				log.error("Proof ID {}", HttpStatus.NOT_FOUND.getReasonPhrase());
+			} else if ("enable".equalsIgnoreCase(secretEnabled) && signConf.get().noSecretMatch(secret)) {
+				re = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+				log.error(HttpStatus.UNAUTHORIZED.getReasonPhrase());
+			} else {
+				final SignatureParameters signParams = signConf.get().getSignParams();
+				signParams.setRoles(signers);
+				final SignatureValidationParameters signVerifParams = verifConf.get().getSignVerifParams();
+				final SignatureParameters signProofParams = signProofConf.get().getSignProofParams();
+				re = executeFSEsignatureWithProof(hash, idFacturationPS, typeFlux, proofParameters, type, signParams,
+						signVerifParams, signProofParams);
+				log.info("Digital Signature With Proof Generated : {}", HttpStatus.OK.getReasonPhrase());
+			}
+			// }
+		}
+		return re;
+
+	}
+
 	/**
 	 * Digital signature.
 	 *
@@ -583,5 +719,46 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 		}
 		rapport.setMetaData(metas);
 		return rapport;
+	}
+
+	/**
+	 * Signature pades with proof.
+	 *
+	 * @param idSignConf      the id sign conf
+	 * @param doc             the doc
+	 * @param idVerifSignConf the id verif sign conf
+	 * @param requestId       the request id
+	 * @param proofTag        the proof tag
+	 * @param applicantId     the applicant id
+	 * @param secret          the secret
+	 * @return the response entity
+	 */
+	@Override
+	public ResponseEntity<ESignSanteSignatureReportWithProof> signaturePadesWithProof(final Long idSignConf,
+			final MultipartFile doc, final Long idVerifSignConf, final String requestId, final String proofTag,
+			final String secret, List<String> signers, final String applicantId) {
+		Version wsVersion = DEFAULT_VERSION;
+		try {
+			// get version object for proof generation
+			wsVersion = new Version(buildProperties.getVersion());
+		} catch (final ParseException e) {
+			log.error(ExceptionUtils.getStackTrace(e));
+		}
+		final ProofParameters proofParameters = new ProofParameters("Sign", requestId, proofTag, applicantId,
+				calledOperation("/signatures/padesbaselinebwithproof"), wsVersion);
+
+		try {
+			// Remplissage de la liste des beans OpenId
+			List<OpenIdTokenBean> tokens;
+			tokens = SignWsUtils.convertOpenIdTokens(parseOpenIdTokenHeader());
+			if (!tokens.isEmpty()) {
+				proofParameters.setOpenidTokens(tokens);
+			}
+			return digitalSignatureWithProof(secret, idSignConf, doc, idVerifSignConf, proofParameters,
+					ESignatureType.PADES, signers);
+		} catch (AsipSignClientException e) {
+			log.error(ExceptionUtils.getStackTrace(e));
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
 	}
 }
