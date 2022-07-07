@@ -8,6 +8,8 @@ import fr.asipsante.api.sign.config.CACRLConfig;
 import fr.asipsante.api.sign.config.ScheduledConfig;
 import fr.asipsante.api.sign.config.WebConfig;
 import fr.asipsante.api.sign.config.provider.impl.ESignSanteSanteConfigurationsJson;
+import fr.asipsante.api.sign.ws.model.ESignSanteSignatureReportWithProof;
+
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +23,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -349,32 +354,25 @@ public class SignatureApiIntegrationTest {
      */
     @Test
     public void signatureFSEestWithProofAndTokenConforme() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
-        		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
-                .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
-                .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
-                .header("X-OpenidToken",
-						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
-                .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                 .header("X-OpenidToken",
+ 						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+                 .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
+        
+         //Vérification du contenu de la réponse
+         String jsonContent = result.getResponse().getContentAsString();         
+         ObjectMapper mapper = new ObjectMapper();
+         System.out.println(jsonContent);
+         ESignSanteSignatureReportWithProof datas = mapper.readValue(jsonContent, ESignSanteSignatureReportWithProof.class);
+         assertTrue("la signature doit être valide",datas.getValide());
+         assertTrue("la liste des erreurs doit être vide",datas.getErreurs().isEmpty());
+  
     }
-    
-    /**
-     * Cas  non passant 
-     *
-     * @throws Exception the exception
-     */
-//    @Test
-//    public void signatureFSEestWithProof2() throws Exception {
-//        mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
-//        		.param("hash",null).param("idFacturationPS","123456").param("typeFlux","T")
-//                .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
-//                .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
-//                .header("X-OpenidToken",
-//						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
-//                .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
-//    }
-    
-    
+        
     /**
      * Cas  passant signature XADES avec preuve avec deux jetons openidToken conformes.
      *

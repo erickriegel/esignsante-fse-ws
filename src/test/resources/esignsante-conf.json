@@ -148,8 +148,8 @@
     {
       "idVerifSign": "3",
       "description": "verif signature fse (pkcs7)",
-      "metadata": "",
-      "rules": "SignatureNonVide,SignatureIntacte,FormatSignature"
+      "metadata": "DATE_SIGNATURE,DN_CERTIFICAT,RAPPORT_DIAGNOSTIQUE,RAPPORT_DSS",
+      "rules": "SignatureNonVide,DocumentIntact,FormatSignature"
     }
   ],
   "certificateVerification": [

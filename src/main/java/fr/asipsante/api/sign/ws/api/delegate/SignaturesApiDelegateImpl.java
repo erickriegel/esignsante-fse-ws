@@ -29,6 +29,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
+import eu.europa.esig.dss.enumerations.DigestAlgorithm;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.DigestDocument;
 import fr.asipsante.api.sign.bean.errors.ErreurSignature;
 import fr.asipsante.api.sign.bean.metadata.MetaDatum;
 import fr.asipsante.api.sign.bean.parameters.FSESignatureParameters;
@@ -248,8 +251,11 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 				// Signature du document					
 				final RapportSignature rapportSignature = signatureService.signFSE(hash.getBytes(), idFacturationPS, typeFlux, signParams);
 					// Validation de la signature
+				final String hashBase64 =  Base64.getEncoder().encodeToString(hash.getBytes());
+		         DSSDocument doc = new  DigestDocument(DigestAlgorithm.SHA256, hashBase64, "nomDuDoc");
+				 
 				final RapportValidationSignature  rapportVerifSignature = signatureValidationService.validateFSESignature(
-							rapportSignature.getDocSigneBytes(), signValidationParameters, serviceCaCrl.getCacrlWrapper());							
+							rapportSignature.getDocSigneBytes(), signValidationParameters, serviceCaCrl.getCacrlWrapper(),doc);							
 				
 			
 				// Géneration de la preuve
@@ -261,9 +267,10 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 					re = new ResponseEntity<>(status);
 				} else {
 					// Signature de la preuve
+				
 					final RapportSignature rapportSignaturePreuve = signatureService.signXADESBaselineB(proof,
 							signProofParams);
-
+					
 					final ESignSanteSignatureReportWithProof rapport = populateResultSignWithProof(
 							rapportVerifSignature.getListeErreurSignature(), rapportVerifSignature.getMetaData(),
 							rapportVerifSignature.isValide(), rapportSignature.getDocSigneBytes(),

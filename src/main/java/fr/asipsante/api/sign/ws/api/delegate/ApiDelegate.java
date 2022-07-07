@@ -79,8 +79,8 @@ public class ApiDelegate {
 		}
 		
 		// XOPENID_HEADER_NAME ="xopenidtoken";   X-OpenidToken
-		Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues(XOPENID_HEADER_NAME));
-	//	Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues("X-OpenidToken"));
+	//	Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues(XOPENID_HEADER_NAME));
+		Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues("X-OpenidToken"));
 	//	List<String> xopenids = (List<String>) getRequest().getHeaders("X-OpenidToken");
 //		if (xopenids != null) {
 //			
