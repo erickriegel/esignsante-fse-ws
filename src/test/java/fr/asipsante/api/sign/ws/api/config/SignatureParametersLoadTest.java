@@ -95,9 +95,11 @@ public class SignatureParametersLoadTest {
 
         final List<ConfVerifSign> confVerifSignList = conf.mapConfigs().mapVerifSignConfig();
         for (final ConfVerifSign confVerifSign : confVerifSignList) {
+        	if (confVerifSign.getIdVerifSignConf() !=3) { //conf 3 => fse sans controle du certificat
             assertEquals("L'autorité de Certification n'est pas reconnue.",
                     "L'autorité de Certification est reconnue.", confVerifSign.getRules().get(0)
                     .getDescription());
+        	}
         }
 
     }

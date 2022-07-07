@@ -13,8 +13,8 @@ servers:
         default: /
 info:
   description: API du composant eSignSante. <br>Ce composant dit de "signature" mutualise et homogénéise la mise en oeuvre des besoins autour de la signature. <br>Il permet de signer des documents ainsi que de vérifier la validité d'une signature ou d'un certificat.    <br>
-  version: 2.5.0.11
-  title: eSignSante
+  version: 1.0.0.0
+  title: eSignSante-fse
   contact:
     email: esignsante@asipsante.fr
 tags:
@@ -986,6 +986,7 @@ components:
           enum:
             - ENVELOPING
             - ENVELOPED
+            - DETACHED
         digestAlgorithm:
           type: string
           enum:
