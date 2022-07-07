@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -41,13 +43,14 @@ public class ApiDelegate {
 	 */
 	public Optional<NativeWebRequest> getRequest() {
 		Optional<NativeWebRequest> request = Optional.empty();
+		
 		final ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder
 				.currentRequestAttributes();
-
 		if (attrs != null) {
 			request = Optional.of(new ServletWebRequest(attrs.getRequest()));
 		}
 		System.out.println(attrs.getAttributeNames(0));
+
 		return request;
 	}
 
@@ -76,8 +79,14 @@ public class ApiDelegate {
 		}
 		
 		// XOPENID_HEADER_NAME ="xopenidtoken";   X-OpenidToken
-		//Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues(XOPENID_HEADER_NAME));
-		Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues("X-OpenidToken"));
+		Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues(XOPENID_HEADER_NAME));
+	//	Optional<String[]> arrayValues = getRequest().map(r -> r.getHeaderValues("X-OpenidToken"));
+	//	List<String> xopenids = (List<String>) getRequest().getHeaders("X-OpenidToken");
+//		if (xopenids != null) {
+//			
+//		}
+		
+		
 		List<OpenidToken> openidTokens = new ArrayList<OpenidToken>();
 		if (arrayValues.isPresent()) {
 
