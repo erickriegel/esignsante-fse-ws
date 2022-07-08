@@ -59,6 +59,7 @@ import fr.asipsante.api.sign.ws.model.ESignSanteSignatureReport;
 import fr.asipsante.api.sign.ws.model.ESignSanteSignatureReportWithProof;
 import fr.asipsante.api.sign.ws.model.Erreur;
 import fr.asipsante.api.sign.ws.model.Metadata;
+import fr.asipsante.api.sign.ws.model.OpenidToken;
 import fr.asipsante.api.sign.ws.model.SignFSEWithProof;
 import fr.asipsante.api.sign.ws.util.ESignatureType;
 import fr.asipsante.api.sign.ws.util.SignWsUtils;
@@ -480,7 +481,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 			} else {
 				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
-
+		
 			return signFSEWithProof(secret, idSignConf, hash, idFacturationPS, typeFlux, idVerifSignConf,
 					proofParameters, ESignatureType.FSE, signers);
 

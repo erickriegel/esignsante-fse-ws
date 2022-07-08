@@ -143,12 +143,17 @@ public class SignWsUtils {
 	        for(OpenidToken token: openidTokens) {
 	        	OpenIdTokenBean tokenBean = new OpenIdTokenBean();
 	        	tokenBean.setAccessToken(token.getAccessToken());
-	        	byte [] instrospectionresponseB64 =token.getIntrospectionResponse().getBytes();
-	        	String encodedIR = Base64.getEncoder().encodeToString(instrospectionresponseB64);
-	        	tokenBean.setIntrospectionResponse(encodedIR);
-	        	byte [] userInfoB64 =token.getUserInfo().getBytes();
-	        	String encodedUI = Base64.getEncoder().encodeToString(userInfoB64);
-	        	tokenBean.setUserInfo(encodedUI);
+	        	
+//	        	byte [] instrospectionresponseB64 =token.getIntrospectionResponse().getBytes();
+//	        	String encodedIR = Base64.getEncoder().encodeToString(instrospectionresponseB64);
+//	        	tokenBean.setIntrospectionResponse(encodedIR);
+//	        	byte [] userInfoB64 =token.getUserInfo().getBytes();
+//	        	String encodedUI = Base64.getEncoder().encodeToString(userInfoB64);
+//	        	tokenBean.setUserInfo(encodedUI);
+	        
+	        	tokenBean.setIntrospectionResponse(token.getIntrospectionResponse());
+	        	tokenBean.setUserInfo(token.getUserInfo());
+	        	
 	        	listTokenBeans.add(tokenBean);
 	        }
         }
