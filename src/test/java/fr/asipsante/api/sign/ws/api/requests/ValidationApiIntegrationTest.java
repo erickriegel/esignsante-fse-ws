@@ -28,15 +28,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 import fr.asipsante.api.sign.config.CACRLConfig;
 import fr.asipsante.api.sign.config.ScheduledConfig;
 import fr.asipsante.api.sign.config.WebConfig;
 import fr.asipsante.api.sign.config.provider.impl.ESignSanteSanteConfigurationsJson;
-import fr.asipsante.api.sign.ws.model.OpenidToken;
 
 /**
  * The Class ValidationApiIntegrationTest.
@@ -284,9 +279,10 @@ public class ValidationApiIntegrationTest {
 
 		final JSONObject body = new JSONObject(result.getResponse().getContentAsString());
 		assertEquals("Toutes les données attendus en réponse ne sont pas retrouvées", 3, body.names().length());
-		assertEquals("La Liste des erreurs devrait contenir 1 erreur", 1, body.getJSONArray("erreurs").length());
+		//assertEquals("La Liste des erreurs devrait contenir 1 erreur", 1, body.getJSONArray("erreurs").length());
+		assertEquals("La Liste des erreurs devrait contenir 2 erreurs", 2, body.getJSONArray("erreurs").length());
 		assertTrue("Le code erreur attendu n'est pas le bon",
-				body.getJSONArray("erreurs").get(0).toString().endsWith("\"codeErreur\":\"ERDOCN01\"}"));
+				body.getJSONArray("erreurs").get(1).toString().endsWith("\"codeErreur\":\"ERDOCN01\"}"));
 	}
 
 	/**

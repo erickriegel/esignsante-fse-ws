@@ -45,7 +45,7 @@ public class ConfigurationLoaderTest {
     @Test
     public void configsOkTest() {
         assertFalse("La liste des configs de signature est vide", conf.getSignature().isEmpty());
-        assertEquals("La liste ne contient pas le bon nombre de configuration de signature", 5,
+        assertEquals("La liste ne contient pas le bon nombre de configuration de signature", 6,
                 conf.getSignature().size());
     }
 
