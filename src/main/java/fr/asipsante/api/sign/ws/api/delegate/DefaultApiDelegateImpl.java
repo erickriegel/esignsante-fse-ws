@@ -46,6 +46,7 @@ public class DefaultApiDelegateImpl extends ApiDelegate implements DefaultApiDel
             methods.add("/signatures/xmldsigwithproof");
             methods.add("/signatures/xadesbaselineb");
             methods.add("/signatures/xadesbaselinebwithproof");
+            methods.add("/signatures/fseWithProof");
             methods.add("/validation/signatures/xmldsig");
             methods.add("/validation/signatures/xmldsigwithproof");
             methods.add("/validation/signatures/xadesbaselineb");

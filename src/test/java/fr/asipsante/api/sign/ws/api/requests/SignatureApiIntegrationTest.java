@@ -353,7 +353,7 @@ public class SignatureApiIntegrationTest {
      * @throws Exception the exception
      */
     @Test
-    public void signatureFSEestWithProofAndTokenConforme() throws Exception {
+    public void signatureFSEWithProofAndTokenConformeTest() throws Exception {
 
          MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
          		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
@@ -366,13 +366,73 @@ public class SignatureApiIntegrationTest {
          //Vérification du contenu de la réponse
          String jsonContent = result.getResponse().getContentAsString();         
          ObjectMapper mapper = new ObjectMapper();
-         System.out.println(jsonContent);
          ESignSanteSignatureReportWithProof datas = mapper.readValue(jsonContent, ESignSanteSignatureReportWithProof.class);
          assertTrue("la signature doit être valide",datas.getValide());
+         assertFalse("la signature ne doit pas être vide",datas.getDocSigne().isEmpty());
          assertTrue("la liste des erreurs doit être vide",datas.getErreurs().isEmpty());
-  
+         assertFalse("Il doit y avoir une preuve",datas.getPreuve().isEmpty());
+         assertEquals("Il doit y avoir 4 metadonnées",4,datas.getMetaData().size());
+    }
+    
+    @Test
+    public void signatureFSEKOxTokenAbsentTest() throws Exception {
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                  .accept("application/json")).andExpect(status().is4xxClientError()).andDo(print()).andReturn();
+    }
+
+    @Test
+    public void signatureFSEKOxTokenNonConformeTest() throws Exception {
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                 .header("X-OpenidToken",
+ 						"badxtoken")
+                 .accept("application/json")).andExpect(status().isBadRequest()).andDo(print()).andReturn();
     }
         
+    @Test
+    public void signatureFSEKOidFacturationManquantTest() throws Exception {
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		.param("hash","hash")
+         		 /*.param("idFacturationPS","123456")*/.param("typeFlux","T")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                 .header("X-OpenidToken",
+ 						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+                 .accept("application/json")).andExpect(status().isBadRequest()).andDo(print()).andReturn();
+    }
+    
+    @Test
+    public void signatureFSEKOHashManquantTest() throws Exception {
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		 .param("idFacturationPS","123456").param("typeFlux","T")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                 .header("X-OpenidToken",
+ 						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+                 .accept("application/json")).andExpect(status().isBadRequest()).andDo(print()).andReturn();
+    }
+    
+    @Test
+    public void signatureFSEKOTypeFluxManquantTest() throws Exception {
+
+         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+         		.param("hash","hash")
+         		.param("idFacturationPS","123456")
+                 .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+                 .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+                 .header("X-OpenidToken",
+ 						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+                 .accept("application/json")).andExpect(status().isBadRequest()).andDo(print()).andReturn();
+    }
     /**
      * Cas  passant signature XADES avec preuve avec deux jetons openidToken conformes.
      *

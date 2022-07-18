@@ -59,7 +59,7 @@ public class DefaultApiIntegrationTest {
      */
     @Test
     public void rootGetTest() throws Exception {
-        final String body = "[\"/\",\"/configurations\",\"/ca\",\"/signatures/xmldsig\",\"/signatures/xmldsigwithproof\",\"/signatures/xadesbaselineb\",\"/signatures/xadesbaselinebwithproof\",\"/validation/signatures/xmldsig\",\"/validation/signatures/xmldsigwithproof\",\"/validation/signatures/xadesbaselineb\",\"/validation/signatures/xadesbaselinebwithproof\",\"/validation/certificats\",\"/validation/certificatswithproof\"]";
+        final String body = "[\"/\",\"/configurations\",\"/ca\",\"/signatures/xmldsig\",\"/signatures/xmldsigwithproof\",\"/signatures/xadesbaselineb\",\"/signatures/xadesbaselinebwithproof\",\"/signatures/fseWithProof\",\"/validation/signatures/xmldsig\",\"/validation/signatures/xmldsigwithproof\",\"/validation/signatures/xadesbaselineb\",\"/validation/signatures/xadesbaselinebwithproof\",\"/validation/certificats\",\"/validation/certificatswithproof\"]";
         mockMvc.perform(get("/").accept("application/json"))
                 .andExpect(status().isOk()).andExpect(content().json(body)).andDo(print());
     }
