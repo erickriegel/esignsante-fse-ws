@@ -253,7 +253,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 				final RapportSignature rapportSignature = signatureService.signFSE(hash.getBytes(), idFacturationPS, typeFlux, signParams);
 					// Validation de la signature
 				final String hashBase64 =  Base64.getEncoder().encodeToString(hash.getBytes());
-		         DSSDocument doc = new  DigestDocument(DigestAlgorithm.SHA256, hashBase64, "nomDuDoc");
+		         DSSDocument doc = new  DigestDocument(DigestAlgorithm.SHA256, hashBase64, "FSE_"+hash);
 				 
 				final RapportValidationSignature  rapportVerifSignature = signatureValidationService.validateFSESignature(
 							rapportSignature.getDocSigneBytes(), signValidationParameters, serviceCaCrl.getCacrlWrapper(),doc);							

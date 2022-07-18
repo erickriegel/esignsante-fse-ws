@@ -182,6 +182,7 @@ public class CRLLoader {
          */
         public CRLFileLoader(final String cRLPath) {
             this.cRLPath = cRLPath;
+        	//this.cRLPath = "http://repo.proxy-dev-forge.asip.hst.fluxus.net/artifactory/crl/ACR-EL-TEST.crl";
             ldapContext = new LdapContext();
         }
 

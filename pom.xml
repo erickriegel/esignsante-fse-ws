@@ -7,6 +7,7 @@
 	<name>esignsante-fse-webservices</name>
 	<version>1.0.0.0-SNAPSHOT</version>
 	<properties>
+	    <java.version>1.8</java.version>
 		<asipsign.version>1.0.0.0-SNAPSHOT</asipsign.version>
 		<springfox-version>2.9.2</springfox-version>
 		<servlet-api.version>4.0.1</servlet-api.version>
@@ -176,8 +177,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>11</source>
-					<target>11</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>
