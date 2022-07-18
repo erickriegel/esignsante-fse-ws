@@ -29,7 +29,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.Assert.*;
@@ -374,6 +379,47 @@ public class SignatureApiIntegrationTest {
          assertEquals("Il doit y avoir 4 metadonnées",4,datas.getMetaData().size());
     }
     
+	/**
+	 * Cas  passant 
+	 *
+	 * @throws Exception the exception
+	 */
+	@Test
+	public void signatureFSEWithProofWithSignersTest() throws Exception {
+//		List<String> signers = new ArrayList<String>(
+//    		    Arrays.asList("Délégataire xxx<(12345)", "Et ...éàè"));
+	     MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")
+	     		.param("hash","hash").param("idFacturationPS","123456").param("typeFlux","T")
+	             .param("secret", "123456").param("idSignConf", "7").param("idVerifSignConf", "3")
+	             .param("requestId", "Request-1").param("proofTag", "MonTAG").param("applicantId", "FSEapp")
+	             .param("signers","délégataire")
+	             .header("X-OpenidToken",
+						"eyJhY2Nlc3NUb2tlbiI6IkFBIiwiaW50cm9zcGVjdGlvblJlc3BvbnNlIjoiQkIiLCJ1c2VySW5mbyI6IlVVIn0=")
+	             .accept("application/json")).andExpect(status().isOk()).andDo(print()).andReturn();
+	    
+	     //Vérification de la preuve
+	     String jsonContent = result.getResponse().getContentAsString();         
+	     ObjectMapper mapper = new ObjectMapper();
+	     ESignSanteSignatureReportWithProof datas = mapper.readValue(jsonContent, ESignSanteSignatureReportWithProof.class);
+	     assertTrue("la signature doit être valide",datas.getValide());
+	     String proof64 = datas.getPreuve();
+	     String xmlProof = new String (Base64.getDecoder().decode(proof64), StandardCharsets.UTF_8);
+	     //règles de validation
+	     assertTrue(xmlProof
+	    		 .contains("<xns:Configuration>rules=SignatureNonVide,DocumentIntact,FormatSignature</xns:Configuration>"));
+	     //xOpenidToken
+	     assertTrue(xmlProof
+	    		 .contains("<xns:TokenIntrospectionResponse>BB</xns:TokenIntrospectionResponse>"));
+	     assertTrue(xmlProof
+	    		 .contains("<xns:UserInfo>UU</xns:UserInfo>"));
+	     assertTrue(xmlProof
+	    		 .contains("<xns:TokenValue>AA</xns:TokenValue>"));
+	     //type de signature
+	     assertTrue(xmlProof
+	    		 .contains("<xns:Type>CMS-NOT-ETSI Signature</xns:Type>"));
+	     //TODO vérification des signers
+	}
+    
     @Test
     public void signatureFSEKOxTokenAbsentTest() throws Exception {
 
@@ -476,5 +522,4 @@ public class SignatureApiIntegrationTest {
                 .param("secret", "disabled").param("idSignConf", "100").accept("application/json"))
                 .andExpect(status().isNotFound()).andDo(print());
     }
-
 }
