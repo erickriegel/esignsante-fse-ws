@@ -384,8 +384,8 @@ public class SignatureApiIntegrationTest {
 	 *
 	 * @throws Exception the exception
 	 */
-	@Test
-	public void signatureFSEWithProofWithSignersTest() throws Exception {
+//	@Test Dans le cas d'une FSE (signature pkcs7), le paramètre 'signers' est ignoré
+	public void notUsed_signatureFSEWithProofWithSignersTest() throws Exception {
 //		List<String> signers = new ArrayList<String>(
 //    		    Arrays.asList("Délégataire xxx<(12345)", "Et ...éàè"));
 	     MvcResult result = mockMvc.perform(MockMvcRequestBuilders.multipart("/signatures/fseWithProof")

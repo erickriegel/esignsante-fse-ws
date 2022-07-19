@@ -504,7 +504,7 @@ public class SignaturesApiDelegateImpl extends ApiDelegate implements Signatures
 	 * @param proofTag        the proof tag
 	 * @param applicantId     the applicant id
 	 * @param secret          the secret
-	 * @param signers         the signers
+	 * @param signers         reserved => paramètre ignoré dans le cas d'une FSE
 	 * @return the response entity
 	 */
 	private ResponseEntity<ESignSanteSignatureReportWithProof> signFSEWithProof(final String secret,
