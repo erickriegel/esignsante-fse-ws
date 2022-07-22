@@ -1,4 +1,4 @@
-job "esignsante" {
+job "esignsante-fse" {
         datacenters = ["${datacenter}"]
         type = "service"
         vault {
@@ -6,7 +6,7 @@ job "esignsante" {
                 change_mode = "noop"
         }
 
-        group "esignsante-servers" {
+        group "esignsante-fse-servers" {
                 count = "1"
                 restart {
                         attempts = 3
