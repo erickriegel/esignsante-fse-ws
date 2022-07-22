@@ -6,7 +6,7 @@ labels = { "domaine" = "esignsante-fse" }
 runner {
   enabled = true
   data_source "git" {
-    url = "https://github.com/erick.riegel/esignsante-fse-ws.git"
+    url = "https://github.com/erickriegel/esignsante-fse-ws.git"
     ref = var.datacenter
   }
   poll {
