@@ -116,6 +116,10 @@ EOF
                         }
                         service {
                                 name = "$\u007BNOMAD_JOB_NAME\u007D"
+				meta {
+				       gravitee_path = "/esignsante/v1"
+				       gravitee_ssl = false
+				}
                                 tags = ["urlprefix-/esignsante/v1/"]
                                 canary_tags = ["canary instance to promote"]
                                 port = "http"
