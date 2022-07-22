@@ -1,12 +1,12 @@
-project = "cybersante/esignsante"
+project = "cybersante/esignsante-fse"
 
 # Labels can be specified for organizational purposes.
-labels = { "domaine" = "esignsante" }
+labels = { "domaine" = "esignsante-fse" }
 
 runner {
   enabled = true
   data_source "git" {
-    url = "https://github.com/ansforge/esignsante-ws.git"
+    url = "https://github.com/erick.riegel/esignsante-fse-ws.git"
     ref = var.datacenter
   }
   poll {
@@ -15,7 +15,7 @@ runner {
 }
 
 # An application to deploy.
-app "cybersante/esignsante" {
+app "cybersante/esignsante-fse-ws" {
 
   # Build specifies how an application should be deployed.
   build {
@@ -25,7 +25,7 @@ app "cybersante/esignsante" {
 
     registry {
       use "docker" {
-        image = "${var.registry_path}/esignsante"
+        image = "${var.registry_path}/esignsante-fse-ws"
         tag   = gitrefpretty()
 		encoded_auth = filebase64("/secrets/dockerAuth.json")
 	  }
@@ -35,7 +35,7 @@ app "cybersante/esignsante" {
   # Deploy to Nomad
   deploy {
     use "nomad-jobspec" {
-      jobspec = templatefile("${path.app}/esignsante.nomad.tpl", {
+      jobspec = templatefile("${path.app}/esignsante-fse-ws.nomad.tpl", {
 	datacenter = var.datacenter
 	proxy_host = var.proxy_host
 	proxy_port = var.proxy_port
@@ -72,7 +72,7 @@ variable dockerfile_path {
 
 variable "registry_path" {
     type = string
-    default = "registry.repo.proxy-dev-forge.asip.hst.fluxus.net/esignsante"
+    default = "registry.repo.proxy-dev-forge.asip.hst.fluxus.net/esignsante-fse"
 }
 
 variable "proxy_host" {
