@@ -2,7 +2,7 @@ job "esignsante-fse" {
         datacenters = ["${datacenter}"]
         type = "service"
         vault {
-                policies = ["esignsante"]
+                policies = ["esignsante-fse"]
                 change_mode = "noop"
         }
 
@@ -77,20 +77,20 @@ job "esignsante-fse" {
                         template {
 data = <<EOH
 {
-   "signature": [ {{ $length := secrets "esignsante/metadata/signature" | len }}{{ $i := 1 }}{{ range secrets "esignsante/metadata/signature" }}
-{{ with secret (printf "esignsante/data/signature/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }} {{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
+   "signature": [ {{ $length := secrets "esignsante-fse/metadata/signature" | len }}{{ $i := 1 }}{{ range secrets "esignsante-fse/metadata/signature" }}
+{{ with secret (printf "esignsante-fse/data/signature/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }} {{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
   ],
-   "proof": [ {{ $length := secrets "esignsante/metadata/proof" | len }}{{ $i := 1 }}{{ range secrets "esignsante/metadata/proof" }}
-{{ with secret (printf "esignsante/data/proof/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
+   "proof": [ {{ $length := secrets "esignsante-fse/metadata/proof" | len }}{{ $i := 1 }}{{ range secrets "esignsante-fse/metadata/proof" }}
+{{ with secret (printf "esignsante-fse/data/proof/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
   ],
-   "signatureVerification": [ {{ $length := secrets "esignsante/metadata/signatureVerification" | len }}{{ $i := 1 }}{{ range secrets "esignsante/metadata/signatureVerification" }}
-{{ with secret (printf "esignsante/data/signatureVerification/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
+   "signatureVerification": [ {{ $length := secrets "esignsante-fse/metadata/signatureVerification" | len }}{{ $i := 1 }}{{ range secrets "esignsante-fse/metadata/signatureVerification" }}
+{{ with secret (printf "esignsante-fse/data/signatureVerification/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
   ],
-   "certificateVerification": [ {{ $length := secrets "esignsante/metadata/certificateVerification" | len }}{{ $i := 1 }}{{ range secrets "esignsante/metadata/certificateVerification" }}
-{{ with secret (printf "esignsante/data/certificateVerification/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
+   "certificateVerification": [ {{ $length := secrets "esignsante-fse/metadata/certificateVerification" | len }}{{ $i := 1 }}{{ range secrets "esignsante-fse/metadata/certificateVerification" }}
+{{ with secret (printf "esignsante-fse/data/certificateVerification/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
   ],
-   "ca": [ {{ $length := secrets "esignsante/metadata/ca" | len }}{{ $i := 1 }}{{ range secrets "esignsante/metadata/ca" }}
-{{ with secret (printf "esignsante/data/ca/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
+   "ca": [ {{ $length := secrets "esignsante-fse/metadata/ca" | len }}{{ $i := 1 }}{{ range secrets "esignsante-fse/metadata/ca" }}
+{{ with secret (printf "esignsante-fse/data/ca/%s" .) }}{{ .Data.data | explodeMap | toJSONPretty | indent 4 }}{{ if lt $i $length }}, {{ end }} {{ end }} {{ $i = add 1 $i }} {{ end }}
   ]
 }
 EOH
