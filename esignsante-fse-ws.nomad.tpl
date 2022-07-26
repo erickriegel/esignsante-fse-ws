@@ -42,7 +42,7 @@ job "esignsante-fse" {
                                 cooldown = "${cooldown}"
                                 check "few_requests" {
                                         source = "prometheus"
-                                        query = "min(max(http_server_requests_seconds_max{_app='esignsante'}!= 0)by(instance))*max(process_cpu_usage{_app='esignsante'})"
+                                        query = "min(max(http_server_requests_seconds_max{_app='esignsante-fse'}!= 0)by(instance))*max(process_cpu_usage{_app='esignsante-fse'})"
                                         strategy "threshold" {
                                                 upper_bound = ${seuil_scale_in}
                                                 delta = -1
@@ -51,7 +51,7 @@ job "esignsante-fse" {
 
                                 check "many_requests" {
                                         source = "prometheus"
-                                        query = "min(max(http_server_requests_seconds_max{_app='esignsante'}!= 0)by(instance))*max(process_cpu_usage{_app='esignsante'})"
+                                        query = "min(max(http_server_requests_seconds_max{_app='esignsante-fse'}!= 0)by(instance))*max(process_cpu_usage{_app='esignsante-fse'})"
                                         strategy "threshold" {
                                                 lower_bound = ${seuil_scale_out}
                                                 delta = 1
