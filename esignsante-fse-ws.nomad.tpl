@@ -104,7 +104,7 @@ spring.servlet.multipart.max-file-size=${spring_http_multipart_max_file_size}
 spring.servlet.multipart.max-request-size=${spring_http_multipart_max_request_size}
 config.secret=${config_secret}
 #config.crl.scheduling=${config_crl_scheduling}
-server.servlet.context-path=/esignsante/v1
+server.servlet.context-path=/esignsante-fse/v1
 com.sun.org.apache.xml.internal.security.ignoreLineBreaks=${ignore_line_breaks}
 management.endpoints.web.exposure.include=prometheus,metrics
 EOF
@@ -117,16 +117,16 @@ EOF
                         service {
                                 name = "$\u007BNOMAD_JOB_NAME\u007D"
 				meta {
-				       gravitee_path = "/esignsante/v1"
+				       gravitee_path = "/esignsante-fse/v1"
 				       gravitee_ssl = false
 				}
-                                tags = ["urlprefix-/esignsante/v1/"]
+                                tags = ["urlprefix-/esignsante-fse/v1/"]
                                 canary_tags = ["canary instance to promote"]
                                 port = "http"
                                 check {
                                         type = "http"
                                         port = "http"
-                                        path = "/esignsante/v1/ca"
+                                        path = "/esignsante-fse/v1/ca"
 					header {
 						Accept = ["application/json"]
 					}
@@ -138,7 +138,7 @@ EOF
                         service {
                                 name = "metrics-exporter"
                                 port = "http"
-                                tags = ["_endpoint=/esignsante/v1/actuator/prometheus",
+                                tags = ["_endpoint=/esignsante-fse/v1/actuator/prometheus",
                                                                 "_app=esignsante",]
                         }
                 }
